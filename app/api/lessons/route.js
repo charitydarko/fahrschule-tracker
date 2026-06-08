@@ -61,50 +61,109 @@ function newId() {
 }
 
 // GET /api/lessons -> all lessons
-export async function GET() {
-  return NextResponse.json(await readLessons());
+// GET /api/lessons?diag=1 -> storage diagnostics (no secrets leaked)
+export async function GET(req) {
+  const diag = new URL(req.url).searchParams.get("diag");
+  if (diag) {
+    const env = {
+      KV_REST_API_URL: Boolean(process.env.KV_REST_API_URL),
+      KV_REST_API_TOKEN: Boolean(process.env.KV_REST_API_TOKEN),
+      UPSTASH_REDIS_REST_URL: Boolean(process.env.UPSTASH_REDIS_REST_URL),
+      UPSTASH_REDIS_REST_TOKEN: Boolean(process.env.UPSTASH_REDIS_REST_TOKEN),
+    };
+    let redisPing = null;
+    let error = null;
+    if (redis) {
+      try {
+        redisPing = await redis.ping();
+      } catch (e) {
+        error = String(e?.message || e);
+      }
+    }
+    return NextResponse.json({
+      storage: redis ? "redis" : "file",
+      redisConfigured: Boolean(redis),
+      env,
+      redisPing,
+      error,
+    });
+  }
+  try {
+    return NextResponse.json(await readLessons());
+  } catch (e) {
+    return NextResponse.json({ error: String(e?.message || e) }, { status: 500 });
+  }
+}
+
+// Serverless filesystems are read-only, so a file write throws EROFS. Turn that
+// (and any storage failure) into a clear message instead of an opaque 500.
+function storageError(e) {
+  const msg = String(e?.message || e);
+  const isReadOnly = /EROFS|read-only|ENOENT/i.test(msg);
+  return NextResponse.json(
+    {
+      error: isReadOnly && !redis
+        ? "Storage is read-only. On Vercel/Netlify you must connect an Upstash Redis store (Storage tab) and redeploy — file storage can't persist there."
+        : "Could not save lesson.",
+      detail: msg,
+      storage: redis ? "redis" : "file",
+    },
+    { status: 500 }
+  );
 }
 
 // POST /api/lessons -> add a lesson
 export async function POST(req) {
-  const body = await req.json();
-  const lessons = await readLessons();
-  const entry = {
-    id: newId(),
-    date: body.date,
-    type: body.type,
-    minutes: Number(body.minutes) || 0,
-    cost: Number(body.cost) || 0,
-    notes: body.notes || "",
-  };
-  lessons.push(entry);
-  await writeLessons(lessons);
-  return NextResponse.json(entry, { status: 201 });
+  try {
+    const body = await req.json();
+    const lessons = await readLessons();
+    const entry = {
+      id: newId(),
+      date: body.date,
+      type: body.type,
+      minutes: Number(body.minutes) || 0,
+      cost: Number(body.cost) || 0,
+      notes: body.notes || "",
+    };
+    lessons.push(entry);
+    await writeLessons(lessons);
+    return NextResponse.json(entry, { status: 201 });
+  } catch (e) {
+    return storageError(e);
+  }
 }
 
 // PUT /api/lessons -> update a lesson (body must include id)
 export async function PUT(req) {
-  const body = await req.json();
-  const lessons = await readLessons();
-  const idx = lessons.findIndex((l) => l.id === body.id);
-  if (idx === -1) return NextResponse.json({ error: "not found" }, { status: 404 });
-  lessons[idx] = {
-    ...lessons[idx],
-    date: body.date ?? lessons[idx].date,
-    type: body.type ?? lessons[idx].type,
-    minutes: body.minutes != null ? Number(body.minutes) : lessons[idx].minutes,
-    cost: body.cost != null ? Number(body.cost) : lessons[idx].cost,
-    notes: body.notes ?? lessons[idx].notes,
-  };
-  await writeLessons(lessons);
-  return NextResponse.json(lessons[idx]);
+  try {
+    const body = await req.json();
+    const lessons = await readLessons();
+    const idx = lessons.findIndex((l) => l.id === body.id);
+    if (idx === -1) return NextResponse.json({ error: "not found" }, { status: 404 });
+    lessons[idx] = {
+      ...lessons[idx],
+      date: body.date ?? lessons[idx].date,
+      type: body.type ?? lessons[idx].type,
+      minutes: body.minutes != null ? Number(body.minutes) : lessons[idx].minutes,
+      cost: body.cost != null ? Number(body.cost) : lessons[idx].cost,
+      notes: body.notes ?? lessons[idx].notes,
+    };
+    await writeLessons(lessons);
+    return NextResponse.json(lessons[idx]);
+  } catch (e) {
+    return storageError(e);
+  }
 }
 
 // DELETE /api/lessons?id=xyz -> remove a lesson
 export async function DELETE(req) {
-  const id = new URL(req.url).searchParams.get("id");
-  const lessons = await readLessons();
-  const next = lessons.filter((l) => l.id !== id);
-  await writeLessons(next);
-  return NextResponse.json({ ok: true, removed: lessons.length - next.length });
+  try {
+    const id = new URL(req.url).searchParams.get("id");
+    const lessons = await readLessons();
+    const next = lessons.filter((l) => l.id !== id);
+    await writeLessons(next);
+    return NextResponse.json({ ok: true, removed: lessons.length - next.length });
+  } catch (e) {
+    return storageError(e);
+  }
 }
