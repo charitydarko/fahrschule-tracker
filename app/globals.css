@@ -1,0 +1,354 @@
+:root {
+  --bg: #efece3;
+  --card: #fbfaf6;
+  --border: #e2ddd0;
+  --ink: #211e19;
+  --muted: #8a857c;
+  --muted2: #6b665c;
+  --green: #1f6b54;
+  --blue: #2d5a8a;
+  --violet: #4a3f6b;
+  --clay: #8a6d3b;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "Outfit", system-ui, sans-serif;
+  -webkit-text-size-adjust: 100%;
+}
+
+input,
+select,
+button {
+  font-family: inherit;
+  font-size: inherit;
+}
+input:focus,
+select:focus {
+  outline: none;
+  border-color: var(--green);
+}
+::placeholder {
+  color: #b3ada1;
+}
+
+.wrap {
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: clamp(18px, 5vw, 32px) clamp(14px, 4vw, 22px) 60px;
+}
+
+/* Header */
+.kicker {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: var(--green);
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+h1 {
+  font-family: "Fraunces", serif;
+  font-size: clamp(26px, 7vw, 34px);
+  line-height: 1.05;
+  font-weight: 600;
+  letter-spacing: -0.5px;
+  margin-bottom: 10px;
+}
+.sub {
+  font-size: clamp(13px, 3.4vw, 14px);
+  line-height: 1.5;
+  color: var(--muted2);
+  max-width: 540px;
+}
+h2 {
+  font-family: "Fraunces", serif;
+  font-size: clamp(17px, 4.6vw, 19px);
+  font-weight: 600;
+  letter-spacing: -0.2px;
+  margin: 30px 0 14px;
+}
+
+/* Stats */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: clamp(8px, 2.5vw, 10px);
+  margin-top: 24px;
+}
+.stat {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: clamp(10px, 3vw, 14px) clamp(8px, 2.5vw, 12px);
+  min-width: 0;
+}
+.stat .val {
+  font-family: "JetBrains Mono", monospace;
+  font-size: clamp(20px, 6vw, 26px);
+  font-weight: 600;
+  line-height: 1;
+}
+.stat .lbl {
+  font-size: clamp(10px, 2.8vw, 11.5px);
+  color: var(--muted);
+  margin-top: 7px;
+  font-weight: 500;
+}
+
+/* Compulsory cards */
+.comp-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.comp {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px 16px;
+}
+.comp-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+.comp-label {
+  font-size: 16px;
+  font-weight: 600;
+}
+.comp-en {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+.comp-count {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 20px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.comp-count .req {
+  color: #b3ada1;
+}
+.comp-count .check {
+  color: var(--green);
+  margin-left: 6px;
+}
+.bar {
+  height: 7px;
+  background: #e7e2d6;
+  border-radius: 99px;
+  margin-top: 12px;
+  overflow: hidden;
+}
+.bar > span {
+  display: block;
+  height: 100%;
+  border-radius: 99px;
+  transition: width 0.4s ease;
+}
+.over {
+  font-size: 11px;
+  color: var(--clay);
+  margin-top: 7px;
+  font-weight: 500;
+}
+
+/* Form */
+.form {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.field label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted2);
+}
+.input {
+  border: 1px solid #ddd7c9;
+  background: #fff;
+  border-radius: 10px;
+  padding: 12px;
+  font-size: 15px;
+  color: var(--ink);
+  width: 100%;
+}
+.min-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.chip {
+  border: 1px solid #ddd7c9;
+  background: #fff;
+  border-radius: 9px;
+  padding: 10px 16px;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--muted2);
+  font-family: "JetBrains Mono", monospace;
+}
+.chip.on {
+  background: var(--green);
+  color: #fff;
+  border-color: var(--green);
+}
+.custom-min {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+.custom-min span {
+  font-size: 12px;
+  color: var(--muted);
+}
+.custom-min input {
+  width: 72px;
+}
+.form-btns {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.primary {
+  background: var(--ink);
+  color: #f3f0e8;
+  border: none;
+  border-radius: 11px;
+  padding: 13px 20px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  flex: 1;
+  min-width: 140px;
+}
+.ghost {
+  background: transparent;
+  color: var(--muted2);
+  border: 1px solid #ddd7c9;
+  border-radius: 11px;
+  padding: 13px 18px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Log */
+.log-count {
+  font-family: "JetBrains Mono", monospace;
+  color: #b3ada1;
+  font-size: 15px;
+}
+.empty {
+  background: var(--card);
+  border: 1px dashed #d5cfc0;
+  border-radius: 14px;
+  padding: 20px 18px;
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+.log {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.log-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+.dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 99px;
+  flex-shrink: 0;
+}
+.log-main {
+  flex: 1;
+  min-width: 0;
+}
+.log-top {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+.log-type {
+  font-size: 14.5px;
+  font-weight: 600;
+}
+.log-date {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 12px;
+  color: var(--muted);
+}
+.log-notes {
+  font-size: 12.5px;
+  color: var(--muted);
+  margin-top: 3px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.log-min {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 14px;
+  color: var(--muted2);
+  font-weight: 600;
+  flex-shrink: 0;
+}
+.log-actions {
+  display: flex;
+  gap: 2px;
+  flex-shrink: 0;
+}
+.icon-btn {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 14px;
+  color: #b3ada1;
+  padding: 8px;
+  border-radius: 8px;
+  line-height: 1;
+}
+.footer {
+  margin-top: 30px;
+  padding-top: 16px;
+  border-top: 1px solid #ddd7c9;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+.state {
+  font-size: 13px;
+  color: var(--muted);
+  padding: 4px 0;
+}
