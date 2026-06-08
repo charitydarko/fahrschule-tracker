@@ -80,10 +80,16 @@ export async function GET(req) {
         error = String(e?.message || e);
       }
     }
+    // Names only (never values) of any injected store-related env vars, so we
+    // can spot integrations that use a different naming convention.
+    const matchedEnvKeys = Object.keys(process.env)
+      .filter((k) => /REDIS|KV_|UPSTASH/i.test(k))
+      .sort();
     return NextResponse.json({
       storage: redis ? "redis" : "file",
       redisConfigured: Boolean(redis),
       env,
+      matchedEnvKeys,
       redisPing,
       error,
     });
