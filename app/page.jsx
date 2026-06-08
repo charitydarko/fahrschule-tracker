@@ -291,7 +291,7 @@ export default function Page() {
       )}
 
       <div className="footer">
-        Saved to <code>data/lessons.json</code> on the server. {counts.total} lessons ·{" "}
+        Saved on the server. {counts.total} lessons ·{" "}
         {counts.totalMin} min ({hours} h) · {spend} total · {counts.c.practice} practice lesson
         {counts.c.practice === 1 ? "" : "s"}.
       </div>
