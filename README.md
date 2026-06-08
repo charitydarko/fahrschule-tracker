@@ -15,16 +15,28 @@ Open http://localhost:3000
 
 ## Where data is saved
 
-Every entry is written to a plain JSON file: **`data/lessons.json`**, via the API
-route at `app/api/lessons/route.js` (GET / POST / PUT / DELETE). Open that file any
-time to read or edit your log by hand — it's just text.
+The API route at `app/api/lessons/route.js` (GET / POST / PUT / DELETE) picks its
+storage automatically:
 
-## Deploying note
+- **Upstash Redis** when its credentials are present in the environment. This is
+  what makes data persist on serverless hosts like Vercel.
+- **`data/lessons.json`** (a plain local file) otherwise, so `npm run dev` works
+  offline with no setup. Open that file any time to read or edit your log by hand.
 
-File-based storage works on your own machine or any always-on Node server (a VPS,
-Docker, `npm run start`, etc.). On serverless hosts (Vercel, Netlify) the filesystem
-is read-only / ephemeral, so the JSON file won't persist there — swap the read/write
-helpers in `route.js` for SQLite, Postgres, or a KV store when you deploy that way.
+## Deploying to Vercel
+
+A serverless filesystem is read-only, so the local JSON file **cannot** persist
+there — that's why lessons appeared not to save. Use a Redis store instead:
+
+1. In the Vercel dashboard, open your project → **Storage** → **Create Database**
+   → **Upstash → Redis** (free tier is fine). Connect it to the project.
+2. Vercel injects the credentials as env vars automatically. The route reads either
+   naming: `KV_REST_API_URL` / `KV_REST_API_TOKEN` or
+   `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN`.
+3. Redeploy (pushing to the connected branch triggers this). Lessons now persist.
+
+No code changes are needed — the route detects the credentials at runtime. Any
+always-on Node server (VPS, Docker, `npm run start`) keeps using the JSON file.
 
 ## Structure
 
@@ -33,6 +45,6 @@ app/
   layout.jsx          fonts + html shell
   globals.css         responsive styles
   page.jsx            UI (client component, talks to the API)
-  api/lessons/route.js   reads/writes data/lessons.json
-data/lessons.json     your saved lessons
+  api/lessons/route.js   Redis in prod, data/lessons.json locally
+data/lessons.json     your saved lessons (local dev only)
 ```

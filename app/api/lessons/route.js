@@ -1,15 +1,44 @@
 import { promises as fs } from "fs";
 import path from "path";
 import { NextResponse } from "next/server";
+import { Redis } from "@upstash/redis";
 
-// Run on the Node runtime so we can touch the filesystem, and never cache.
+// Run on the Node runtime so we can touch the filesystem locally, and never cache.
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+// ---------------------------------------------------------------------------
+// Storage
+//
+// On a serverless host (Vercel, Netlify) the project filesystem is read-only,
+// so we CANNOT persist to a JSON file there — writes throw and data vanishes.
+// When Upstash Redis credentials are present (set automatically by Vercel's
+// Storage → Upstash Redis integration) we use that. Otherwise we fall back to
+// a local JSON file so `npm run dev` keeps working offline.
+// ---------------------------------------------------------------------------
+
+const REDIS_KEY = "lessons";
+const REDIS_URL = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
+const REDIS_TOKEN = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
+const redis = REDIS_URL && REDIS_TOKEN ? new Redis({ url: REDIS_URL, token: REDIS_TOKEN }) : null;
 
 const DATA_DIR = path.join(process.cwd(), "data");
 const DATA_FILE = path.join(DATA_DIR, "lessons.json");
 
 async function readLessons() {
+  if (redis) {
+    const data = await redis.get(REDIS_KEY);
+    // @upstash/redis already parses JSON; guard against legacy string values.
+    if (Array.isArray(data)) return data;
+    if (typeof data === "string") {
+      try {
+        return JSON.parse(data || "[]");
+      } catch {
+        return [];
+      }
+    }
+    return [];
+  }
   try {
     const raw = await fs.readFile(DATA_FILE, "utf8");
     return JSON.parse(raw || "[]");
@@ -19,6 +48,10 @@ async function readLessons() {
 }
 
 async function writeLessons(lessons) {
+  if (redis) {
+    await redis.set(REDIS_KEY, lessons);
+    return;
+  }
   await fs.mkdir(DATA_DIR, { recursive: true });
   await fs.writeFile(DATA_FILE, JSON.stringify(lessons, null, 2), "utf8");
 }
